@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -8,12 +11,39 @@ android {
     namespace = "com.notiask"
     compileSdk = 36
 
+    val keystoreProperties = Properties()
+    val keystorePropertiesFile = rootProject.file("local.properties")
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    }
+
+    signingConfigs {
+        create("release") {
+            val path = keystoreProperties.getProperty("signing.storeFilePath")
+            if (path != null) {
+                storeFile = file(path)
+            }
+            storePassword = keystoreProperties.getProperty("signing.storePassword")
+            keyAlias = keystoreProperties.getProperty("signing.keyAlias")
+            keyPassword = keystoreProperties.getProperty("signing.keyPassword")
+        }
+    }
+
     defaultConfig {
         applicationId = "com.notiask"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
+        }
     }
 
     buildFeatures { compose = true; buildConfig = true }
