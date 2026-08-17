@@ -16,7 +16,11 @@ class AiGateway {
     suspend fun ask(profile: ConfiguredProfile, question: String): Result<String> = runCatching {
         val adapter: AiServiceAdapter = when (profile.profile.provider) {
             ProviderKind.ANTHROPIC -> AnthropicAdapter(client)
-            else -> OpenAiCompatibleAdapter(client)
+            ProviderKind.OPENAI,
+            ProviderKind.DASHSCOPE,
+            ProviderKind.DEEPSEEK,
+            ProviderKind.KIMI,
+            ProviderKind.COMPATIBLE -> OpenAiCompatibleAdapter(client)
         }
         adapter.ask(profile, question)
     }

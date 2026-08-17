@@ -113,7 +113,7 @@ private fun SettingsScreen(container: AppContainer, onEnable: () -> Unit, onBatt
                 Text("AI 配置", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                 Button(onClick = { editing = null; showEditor = true }) { Text("添加") }
             }
-            if (profiles.isEmpty()) Text("尚无配置。请添加 OpenAI、Claude、通义或任意 OpenAI 兼容服务。")
+            if (profiles.isEmpty()) Text("尚无配置。请添加 OpenAI、Claude、通义、DeepSeek、Kimi 或任意 OpenAI 兼容服务。")
             profiles.forEach { profile ->
                 ProfileRow(
                     profile = profile,

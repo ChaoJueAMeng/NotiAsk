@@ -17,7 +17,9 @@
 | OpenAI | OpenAI | `https://api.openai.com/v1` | `gpt-4.1-mini` |
 | Anthropic | Anthropic | `https://api.anthropic.com` | `claude-sonnet-4-20250514` |
 | 通义千问 | 通义千问 / DashScope | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus` |
-| DeepSeek、Kimi、智谱等 | OpenAI 兼容接口 | 填该厂商的兼容 API 根 URL | 填该厂商模型名 |
+| DeepSeek | DeepSeek | `https://api.deepseek.com` | `deepseek-v4-flash`（也可填 `deepseek-v4-pro`） |
+| Kimi | Kimi / Moonshot | `https://api.moonshot.cn/v1` | `kimi-k2.6`（也可填 `kimi-k3`、`kimi-k2`） |
+| 智谱等其他兼容服务 | OpenAI 兼容接口 | 填该厂商的兼容 API 根 URL | 填该厂商模型名 |
 
 Anthropic 使用原生 Messages 协议及 `x-api-key`；其他选择均走 OpenAI Chat Completions 兼容协议。Base URL 是根 URL，应用会自动追加 `chat/completions` 或 `v1/messages`。
 
