@@ -56,17 +56,22 @@ import com.notiask.data.ProviderKind
 import com.notiask.notification.QuestionService
 
 class MainActivity : ComponentActivity() {
+    private var notificationsEnabled by mutableStateOf(false)
+
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        notificationsEnabled = granted
         if (granted) QuestionService.start(this)
         else Toast.makeText(this, "未授权通知；前台服务通知不会显示在通知栏", Toast.LENGTH_LONG).show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        notificationsEnabled = notificationsAllowed()
         setContent {
             MaterialTheme {
                 SettingsScreen(
                     container = appContainer(),
+                    notificationsEnabled = notificationsEnabled,
                     onEnable = { enableNotificationAssistant() },
                     onBatterySettings = { openBatterySettings() }
                 )
@@ -75,6 +80,11 @@ class MainActivity : ComponentActivity() {
         if (appContainer().profiles.defaultProfile() != null && notificationsAllowed()) {
             QuestionService.start(this)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        notificationsEnabled = notificationsAllowed()
     }
 
     private fun enableNotificationAssistant() {
@@ -91,12 +101,18 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsScreen(container: AppContainer, onEnable: () -> Unit, onBatterySettings: () -> Unit) {
+private fun SettingsScreen(
+    container: AppContainer,
+    notificationsEnabled: Boolean,
+    onEnable: () -> Unit,
+    onBatterySettings: () -> Unit
+) {
     val context = LocalContext.current
     val profiles by container.profiles.profiles.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<AiProfile?>(null) }
     var showEditor by rememberSaveable { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf<AiProfile?>(null) }
+    var showAlreadyEnabled by remember { mutableStateOf(false) }
 
     Scaffold(topBar = { TopAppBar(title = { Text("NotiAsk 设置") }) }) { padding ->
         Column(
@@ -105,7 +121,13 @@ private fun SettingsScreen(container: AppContainer, onEnable: () -> Unit, onBatt
         ) {
             Text("通知栏 AI 问答", style = MaterialTheme.typography.headlineSmall)
             Text("保存配置后启用服务。下拉系统通知栏，展开 NotiAsk 并直接输入问题。")
-            Button(onClick = onEnable, modifier = Modifier.fillMaxWidth()) { Text("启用通知栏问答") }
+            Button(
+                onClick = {
+                    if (notificationsEnabled) showAlreadyEnabled = true
+                    else onEnable()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(if (notificationsEnabled) "已启用" else "启用通知栏问答") }
             OutlinedButton(onClick = onBatterySettings, modifier = Modifier.fillMaxWidth()) { Text("查看电池优化设置（可选）") }
             Text("为保证不同厂商系统的稳定性，可在系统设置中允许 NotiAsk 不受电池优化限制。", style = MaterialTheme.typography.bodySmall)
             HorizontalDivider()
@@ -136,6 +158,14 @@ private fun SettingsScreen(container: AppContainer, onEnable: () -> Unit, onBatt
                     .onSuccess { showEditor = false; Toast.makeText(context, "配置已加密保存", Toast.LENGTH_SHORT).show() }
                     .onFailure { Toast.makeText(context, it.message ?: "无法保存配置", Toast.LENGTH_LONG).show() }
             }
+        )
+    }
+    if (showAlreadyEnabled) {
+        AlertDialog(
+            onDismissRequest = { showAlreadyEnabled = false },
+            title = { Text("已启用") },
+            text = { Text("通知栏问答已启用。") },
+            confirmButton = { Button(onClick = { showAlreadyEnabled = false }) { Text("确定") } }
         )
     }
     confirmDelete?.let { profile ->
