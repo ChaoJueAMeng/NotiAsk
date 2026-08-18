@@ -9,11 +9,11 @@ class AiGateway {
     private val client = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(90, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .callTimeout(100, TimeUnit.SECONDS)
         .build()
 
-    suspend fun ask(profile: ConfiguredProfile, question: String): Result<String> = runCatching {
+    suspend fun ask(profile: ConfiguredProfile, question: String, imageJpeg: ByteArray? = null): Result<String> = runCatching {
         val adapter: AiServiceAdapter = when (profile.profile.provider) {
             ProviderKind.ANTHROPIC -> AnthropicAdapter(client)
             ProviderKind.OPENAI,
@@ -22,6 +22,6 @@ class AiGateway {
             ProviderKind.KIMI,
             ProviderKind.COMPATIBLE -> OpenAiCompatibleAdapter(client)
         }
-        adapter.ask(profile, question)
+        adapter.ask(profile, question, imageJpeg)
     }
 }

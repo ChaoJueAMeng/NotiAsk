@@ -4,4 +4,15 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:colorAccent">@android:color/holo_blue_light</item>
     </style>
+    <style name="Theme.NotiAsk.Transparent" parent="Theme.NotiAsk">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
 </resources>

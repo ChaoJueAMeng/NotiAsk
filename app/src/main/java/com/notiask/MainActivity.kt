@@ -109,6 +109,11 @@ private fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val profiles by container.profiles.profiles.collectAsStateWithLifecycle()
+    val defaultId by container.profiles.defaultId.collectAsStateWithLifecycle()
+    val orderedProfiles = remember(profiles, defaultId) {
+        if (defaultId == null) profiles
+        else profiles.sortedByDescending { it.id == defaultId }
+    }
     var editing by remember { mutableStateOf<AiProfile?>(null) }
     var showEditor by rememberSaveable { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf<AiProfile?>(null) }
@@ -120,7 +125,7 @@ private fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text("通知栏 AI 问答", style = MaterialTheme.typography.headlineSmall)
-            Text("保存配置后启用服务。下拉系统通知栏，展开 NotiAsk 并直接输入问题。")
+            Text("保存配置后启用服务。下拉系统通知栏，展开 NotiAsk 可直接输入问题，或点「截屏搜索」；截屏后会在通知栏提示已截图，可继续输入问题。")
             Button(
                 onClick = {
                     if (notificationsEnabled) showAlreadyEnabled = true
@@ -135,11 +140,11 @@ private fun SettingsScreen(
                 Text("AI 配置", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                 Button(onClick = { editing = null; showEditor = true }) { Text("添加") }
             }
-            if (profiles.isEmpty()) Text("尚无配置。请添加 OpenAI、Claude、通义、DeepSeek、Kimi 或任意 OpenAI 兼容服务。")
-            profiles.forEach { profile ->
+            if (orderedProfiles.isEmpty()) Text("尚无配置。请添加 OpenAI、Claude、通义、DeepSeek、Kimi 或任意 OpenAI 兼容服务。")
+            orderedProfiles.forEach { profile ->
                 ProfileRow(
                     profile = profile,
-                    isDefault = container.profiles.isDefault(profile.id),
+                    isDefault = profile.id == defaultId,
                     onSelect = { container.profiles.selectDefault(profile.id) },
                     onEdit = { editing = profile; showEditor = true },
                     onDelete = { confirmDelete = profile }
@@ -164,7 +169,7 @@ private fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showAlreadyEnabled = false },
             title = { Text("已启用") },
-            text = { Text("通知栏问答已启用。") },
+            text = { Text("通知栏问答已启用。下拉展开 NotiAsk 通知即可提问或截屏搜索。") },
             confirmButton = { Button(onClick = { showAlreadyEnabled = false }) { Text("确定") } }
         )
     }
@@ -186,9 +191,9 @@ private fun ProfileRow(profile: AiProfile, isDefault: Boolean, onSelect: () -> U
             Column(Modifier.weight(1f)) {
                 Text(profile.name, style = MaterialTheme.typography.titleMedium)
                 Text("${profile.provider.displayName} · ${profile.model}", style = MaterialTheme.typography.bodySmall)
-                if (isDefault) Text("当前默认", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
+                if (isDefault) Text("当前使用", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
             }
-            if (!isDefault) OutlinedButton(onClick = onSelect) { Text("设为默认") }
+            if (!isDefault) OutlinedButton(onClick = onSelect) { Text("使用该模型") }
             IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "删除配置") }
         }
     }
@@ -220,7 +225,7 @@ private fun ProfileEditor(initial: AiProfile?, existingKey: String, onDismiss: (
                 OutlinedTextField(apiKey, { apiKey = it }, label = { Text("API Key") }, visualTransformation = PasswordVisualTransformation(), singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(baseUrl, { baseUrl = it }, label = { Text("Base URL") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(model, { model = it }, label = { Text("模型名称") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedButton(onClick = { makeDefault = !makeDefault }, modifier = Modifier.fillMaxWidth()) { Text(if (makeDefault) "✓ 保存后设为默认" else "保存后设为默认") }
+                OutlinedButton(onClick = { makeDefault = !makeDefault }, modifier = Modifier.fillMaxWidth()) { Text(if (makeDefault) "✓ 保存后使用该模型" else "保存后使用该模型") }
             }
         },
         confirmButton = { Button(onClick = { onSave(AiProfile(id = initial?.id ?: java.util.UUID.randomUUID().toString(), name = name, provider = provider, baseUrl = baseUrl, model = model), apiKey, makeDefault) }) { Text("保存") } },

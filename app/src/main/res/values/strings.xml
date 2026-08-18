@@ -1,5 +1,28 @@
 <resources>
     <string name="app_name">NotiAsk</string>
     <string name="notification_channel_name">AI 问答</string>
-    <string name="notification_channel_description">从通知栏向 AI 提问并接收回答</string>
+    <string name="notification_channel_description">从通知栏向 AI 提问、截屏搜索并接收回答</string>
+    <string name="notification_input_hint">输入你的问题</string>
+    <string name="screenshot_input_hint">可补充问题，留空则按提示解读截图</string>
+    <string name="ask_title">就在通知栏里提问！</string>
+    <string name="ask_title_unconfigured">请先配置 AI</string>
+    <string name="ask_configure_hint">点按此处打开设置</string>
+    <string name="ask_expand_more_hint">展开后可提问→</string>
+    <string name="action_ask">提问</string>
+    <string name="action_send">发送</string>
+    <string name="action_back">返回</string>
+    <string name="screenshot_ready_title">已截图</string>
+    <string name="screenshot_ready_subtitle">点「提问」补充问题，或点「直接提问」</string>
+    <string name="screenshot_ready_detail">已截取当前屏幕。可补充问题再发给 AI，也可以直接提问。</string>
+    <string name="action_switch_model">切换模型</string>
+    <string name="action_copy">复制</string>
+    <string name="action_back_to_ask">返回提问</string>
+    <string name="action_more_models">更多模型</string>
+    <string name="switch_model_title">点选要使用的模型，当前使用置顶</string>
+    <string name="switch_model_expand_hint">展开通知以选择模型</string>
+    <string name="switch_model_empty">尚无配置，请先在应用内添加</string>
+    <string name="currently_using">当前使用</string>
+    <string name="tap_to_use">使用该模型</string>
+    <string name="tap_next_page">下一页</string>
+    <string name="copied_answer">已复制回答</string>
 </resources>

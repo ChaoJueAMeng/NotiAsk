@@ -1,0 +1,33 @@
+---
+description: 日常功能只能在通知栏完成，使用路径禁止弹窗和跳进应用
+alwaysApply: true
+---
+
+# 通知栏内完成全部使用路径
+
+NotiAsk 的产品边界是：**提问、看回答、复制、切换当前使用模型、截屏提问等日常功能，必须只在通知栏（Notification + RemoteViews / Notification action）里完成。**
+
+## 硬性禁止
+
+- 使用功能时不得启动 Activity、Dialog、BottomSheet、AlertDialog、Compose Dialog，也不得把用户从通知栏拉进应用。
+- 不得用「点通知 → 打开半透明页 / 输入页 / 选择模型页」绕过通知栏限制。
+- 不得为了规避 RemoteViews 限制而新增仅用于使用路径的界面（例如 `AskActivity`、`AnswerViewActivity`、`SwitchModelActivity`）。
+
+```kotlin
+// ❌ BAD：使用路径跳出通知栏
+pendingIntent = PendingIntent.getActivity(ctx, 0, Intent(ctx, AskActivity::class.java), flags)
+
+// ✅ GOOD：留在通知栏，用 BroadcastReceiver / Service 更新同一条或下一条通知
+pendingIntent = PendingIntent.getBroadcast(ctx, 0, Intent(ctx, QuestionReceiver::class.java).setAction(ACTION_ASK), flags)
+```
+
+## 允许的例外
+
+仅以下情况可以进入应用或系统界面，且不得夹带提问/看回答流程：
+
+- 首次配置：保存 API、管理模型档案、授予通知/截屏等系统权限
+- 用户从桌面图标主动打开设置页
+
+## 做不到时
+
+若通知栏 API 无法完美实现（长文本选择、输入框滚动等），必须在通知栏内用折中方案（展开通知、多条通知、RemoteInput、复制到剪贴板、更新通知内容），**不得改成弹窗或跳转应用**。先说明限制，再在通知栏内实现最接近的交互。
