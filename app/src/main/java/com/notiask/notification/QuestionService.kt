@@ -11,18 +11,25 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class QuestionService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notification = appContainer().notifications.persistentNotification(appContainer().profiles.defaultProfile() != null)
-        if (Build.VERSION.SDK_INT >= 34) {
-            startForeground(NotificationController.FOREGROUND_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        } else {
-            startForeground(NotificationController.FOREGROUND_ID, notification)
+    override fun onCreate() {
+        super.onCreate()
+        serviceScope.launch(Dispatchers.Main) {
+            combine(
+                appContainer().profiles.profiles,
+                appContainer().profiles.defaultId,
+            ) { _, _ -> }
+                .collect { startForegroundNotification() }
         }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startForegroundNotification()
         intent?.getStringExtra(EXTRA_QUESTION)?.takeIf { it.isNotBlank() }?.let { question ->
             val wantsImage = intent.getBooleanExtra(EXTRA_HAS_IMAGE, false)
             val image = if (wantsImage) appContainer().screenshotSession.takePendingAskImage() else null
@@ -36,6 +43,20 @@ class QuestionService : Service() {
     override fun onDestroy() {
         serviceScope.cancel()
         super.onDestroy()
+    }
+
+    private fun startForegroundNotification() {
+        val repo = appContainer().profiles
+        val notification = appContainer().notifications.persistentNotification(
+            repo.defaultProfile(),
+            repo.profiles.value,
+            repo.defaultId.value,
+        )
+        if (Build.VERSION.SDK_INT >= 34) {
+            startForeground(NotificationController.FOREGROUND_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            startForeground(NotificationController.FOREGROUND_ID, notification)
+        }
     }
 
     private fun askAi(question: String, imageJpeg: ByteArray?, wantsImage: Boolean) = serviceScope.launch {
