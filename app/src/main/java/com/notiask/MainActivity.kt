@@ -10,15 +10,20 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -40,20 +45,30 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notiask.data.AiProfile
 import com.notiask.data.ProviderKind
 import com.notiask.notification.QuestionService
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private var notificationsEnabled by mutableStateOf(false)
@@ -140,17 +155,23 @@ private fun SettingsScreen(
                 Text("AI 配置", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                 Button(onClick = { editing = null; showEditor = true }) { Text("添加") }
             }
-            if (orderedProfiles.isEmpty()) Text("尚无配置。请添加 OpenAI、Claude、通义、DeepSeek、Kimi 或任意 OpenAI 兼容服务。")
-            orderedProfiles.forEach { profile ->
-                ProfileRow(
-                    profile = profile,
-                    isDefault = profile.id == defaultId,
-                    onSelect = { container.profiles.selectDefault(profile.id) },
-                    onEdit = { editing = profile; showEditor = true },
-                    onDelete = { confirmDelete = profile }
-                )
+            if (orderedProfiles.isEmpty()) {
+                Text("尚无配置。请添加 OpenAI、Claude、通义、DeepSeek、Kimi 或任意 OpenAI 兼容服务。")
             }
-            Spacer(Modifier.width(1.dp))
+            orderedProfiles.forEach { profile ->
+                key(profile.id) {
+                    ProfileRow(
+                        modifier = Modifier
+                            .zIndex(if (profile.id == defaultId) 1f else 0f)
+                            .animatePlacement(),
+                        profile = profile,
+                        isDefault = profile.id == defaultId,
+                        onSelect = { container.profiles.selectDefault(profile.id) },
+                        onEdit = { editing = profile; showEditor = true },
+                        onDelete = { confirmDelete = profile }
+                    )
+                }
+            }
         }
     }
     if (showEditor) {
@@ -185,18 +206,59 @@ private fun SettingsScreen(
 }
 
 @Composable
-private fun ProfileRow(profile: AiProfile, isDefault: Boolean, onSelect: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onEdit)) {
+private fun ProfileRow(
+    profile: AiProfile,
+    isDefault: Boolean,
+    onSelect: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(modifier = modifier.fillMaxWidth().clickable(onClick = onEdit)) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(profile.name, style = MaterialTheme.typography.titleMedium)
                 Text("${profile.provider.displayName} · ${profile.model}", style = MaterialTheme.typography.bodySmall)
-                if (isDefault) Text("当前使用", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
             }
-            if (!isDefault) OutlinedButton(onClick = onSelect) { Text("使用该模型") }
+            Box(contentAlignment = Alignment.CenterEnd) {
+                Text(
+                    "当前使用",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.graphicsLayer { alpha = if (isDefault) 1f else 0f }
+                )
+                OutlinedButton(
+                    onClick = onSelect,
+                    enabled = !isDefault,
+                    modifier = Modifier.graphicsLayer { alpha = if (isDefault) 0f else 1f }
+                ) { Text("使用该模型") }
+            }
             IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "删除配置") }
         }
     }
+}
+
+private val placementSpec = tween<IntOffset>(durationMillis = 280, easing = FastOutSlowInEasing)
+
+private fun Modifier.animatePlacement(
+    animationSpec: FiniteAnimationSpec<IntOffset> = placementSpec
+): Modifier = composed {
+    val scope = rememberCoroutineScope()
+    val translation = remember { Animatable(IntOffset.Zero, IntOffset.VectorConverter) }
+    val lastLayoutPos = remember { arrayOfNulls<IntOffset>(1) }
+    onPlaced { coordinates ->
+        val newPos = coordinates.positionInParent().round()
+        val previous = lastLayoutPos[0]
+        lastLayoutPos[0] = newPos
+        if (previous == null) return@onPlaced
+        val layoutDelta = newPos - previous
+        if (layoutDelta == IntOffset.Zero) return@onPlaced
+        val from = translation.value - layoutDelta
+        scope.launch {
+            translation.snapTo(from)
+            translation.animateTo(IntOffset.Zero, animationSpec)
+        }
+    }.offset { translation.value }
 }
 
 @Composable
