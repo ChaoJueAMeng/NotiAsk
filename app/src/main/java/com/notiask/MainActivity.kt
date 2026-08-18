@@ -120,7 +120,7 @@ private fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text("通知栏 AI 问答", style = MaterialTheme.typography.headlineSmall)
-            Text("保存配置后启用服务。下拉系统通知栏，展开 NotiAsk 并直接输入问题。")
+            Text("保存配置后启用服务。下拉系统通知栏，点按 NotiAsk 的输入框即可提问。")
             Button(
                 onClick = {
                     if (notificationsEnabled) showAlreadyEnabled = true

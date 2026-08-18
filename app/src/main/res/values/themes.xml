@@ -4,4 +4,13 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:colorAccent">@android:color/holo_blue_light</item>
     </style>
+
+    <style name="Theme.NotiAsk.Ask" parent="Theme.NotiAsk">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:windowSoftInputMode">stateVisible|adjustResize</item>
+    </style>
 </resources>

@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 键盘：通知栏小尺寸下比回复箭头更直观地表示「点击输入」 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,5H4C2.9,5 2,5.9 2,7v10c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V7C22,5.9 21.1,5 20,5zM11,8h2v2h-2V8zM11,11h2v2h-2V11zM8,8h2v2H8V8zM8,11h2v2H8V11zM5,8h2v2H5V8zM5,11h2v2H5V11zM8,14h8v2H8V14zM16,11h2v2h-2V11zM16,8h2v2h-2V8zM19,11h2v2h-2V11zM19,8h2v2h-2V8z" />
+</vector>
