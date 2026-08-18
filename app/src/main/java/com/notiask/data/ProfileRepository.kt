@@ -13,9 +13,11 @@ class ProfileRepository(context: Context) {
     private val profilesSerializer = ListSerializer(AiProfile.serializer())
     private val _profiles = MutableStateFlow(readProfiles())
     val profiles: StateFlow<List<AiProfile>> = _profiles
+    private val _defaultId = MutableStateFlow(preferences.getString(DEFAULT_ID, null))
+    val defaultId: StateFlow<String?> = _defaultId
 
     fun defaultProfile(): ConfiguredProfile? {
-        val id = preferences.getString(DEFAULT_ID, null) ?: return null
+        val id = _defaultId.value ?: return null
         val profile = _profiles.value.firstOrNull { it.id == id } ?: return null
         val encryptedKey = preferences.getString(keyName(id), null) ?: return null
         return runCatching { ConfiguredProfile(profile, cipher.decrypt(encryptedKey)) }.getOrNull()
@@ -31,31 +33,36 @@ class ProfileRepository(context: Context) {
         require(sanitized.baseUrl.isNotBlank()) { "Base URL 不能为空" }
         require(sanitized.model.isNotBlank()) { "模型名称不能为空" }
         val updated = _profiles.value.filterNot { it.id == sanitized.id } + sanitized
+        val becomeDefault = makeDefault || _defaultId.value == null
         preferences.edit()
             .putString(PROFILES, json.encodeToString(profilesSerializer, updated))
             .putString(keyName(sanitized.id), cipher.encrypt(apiKey.trim()))
             .apply {
-                if (makeDefault || preferences.getString(DEFAULT_ID, null) == null) putString(DEFAULT_ID, sanitized.id)
+                if (becomeDefault) putString(DEFAULT_ID, sanitized.id)
             }
             .apply()
         _profiles.value = updated
+        if (becomeDefault) _defaultId.value = sanitized.id
     }
 
     fun selectDefault(id: String) {
         require(_profiles.value.any { it.id == id })
         preferences.edit().putString(DEFAULT_ID, id).apply()
+        _defaultId.value = id
     }
 
     fun delete(id: String) {
         val updated = _profiles.value.filterNot { it.id == id }
         preferences.edit().remove(keyName(id)).putString(PROFILES, json.encodeToString(profilesSerializer, updated)).apply()
-        if (preferences.getString(DEFAULT_ID, null) == id) {
-            preferences.edit().putString(DEFAULT_ID, updated.firstOrNull()?.id).apply()
+        if (_defaultId.value == id) {
+            val next = updated.firstOrNull()?.id
+            preferences.edit().putString(DEFAULT_ID, next).apply()
+            _defaultId.value = next
         }
         _profiles.value = updated
     }
 
-    fun isDefault(id: String) = preferences.getString(DEFAULT_ID, null) == id
+    fun isDefault(id: String) = _defaultId.value == id
 
     fun apiKeyFor(id: String): String? = preferences.getString(keyName(id), null)?.let { encrypted ->
         runCatching { cipher.decrypt(encrypted) }.getOrNull()
