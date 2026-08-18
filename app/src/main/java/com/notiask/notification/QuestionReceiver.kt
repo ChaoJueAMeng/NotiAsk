@@ -63,6 +63,10 @@ class QuestionReceiver : BroadcastReceiver() {
                 notifications.setModelPage(intent.getIntExtra(NotificationController.EXTRA_MODEL_PAGE, 0))
                 QuestionService.start(context)
             }
+            NotificationController.ACTION_RESTORE_PERSISTENT -> {
+                // 误滑常驻通知后系统会投递 DeleteIntent；必须再走 startForeground 才能挂回。
+                QuestionService.start(context)
+            }
         }
     }
 }

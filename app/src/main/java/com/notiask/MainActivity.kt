@@ -100,6 +100,10 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         notificationsEnabled = notificationsAllowed()
+        // 误滑常驻通知后，回到设置页时再走 startForeground 挂回（DeleteIntent 为主路径）。
+        if (appContainer().profiles.defaultProfile() != null && notificationsAllowed()) {
+            QuestionService.start(this)
+        }
     }
 
     private fun enableNotificationAssistant() {

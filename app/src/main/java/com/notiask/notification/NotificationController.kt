@@ -122,6 +122,7 @@ class NotificationController(private val context: Context) {
             .setContentText(subtitle)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setDeleteIntent(restorePersistentIntent())
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(askRemoteViews(title, subtitle, showExpandHint = configured))
             .setCustomHeadsUpContentView(askRemoteViews(title, subtitle, showExpandHint = configured))
@@ -200,6 +201,7 @@ class NotificationController(private val context: Context) {
             .setContentText(context.getString(R.string.switch_model_expand_hint))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setDeleteIntent(restorePersistentIntent())
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(collapsed)
             .setCustomBigContentView(expanded)
@@ -284,6 +286,9 @@ class NotificationController(private val context: Context) {
 
     private fun discardScreenshotIntent(): PendingIntent = broadcast(ACTION_DISCARD_SCREENSHOT, REQUEST_DISCARD_SCREENSHOT)
 
+    /** Android 13+ 允许用户滑掉 FGS 常驻通知；DeleteIntent 触发后通过 startForeground 重新挂上。 */
+    private fun restorePersistentIntent(): PendingIntent = broadcast(ACTION_RESTORE_PERSISTENT, REQUEST_RESTORE_PERSISTENT)
+
     private fun screenshotAction(): NotificationCompat.Action {
         val intent = Intent(context, ScreenshotAskActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION)
@@ -317,6 +322,7 @@ class NotificationController(private val context: Context) {
         const val ACTION_SHOW_ASK = "com.notiask.action.SHOW_ASK"
         const val ACTION_SELECT_MODEL = "com.notiask.action.SELECT_MODEL"
         const val ACTION_MODEL_PAGE = "com.notiask.action.MODEL_PAGE"
+        const val ACTION_RESTORE_PERSISTENT = "com.notiask.action.RESTORE_PERSISTENT"
         const val EXTRA_HAS_IMAGE = "has_image"
         const val EXTRA_PROFILE_ID = "profile_id"
         const val EXTRA_MODEL_PAGE = "model_page"
@@ -331,6 +337,7 @@ class NotificationController(private val context: Context) {
         private const val REQUEST_SWITCH_MODEL = 2106
         private const val REQUEST_COPY_ANSWER = 2108
         private const val REQUEST_SHOW_ASK = 2109
+        private const val REQUEST_RESTORE_PERSISTENT = 2110
         private const val REQUEST_MODEL_PAGE = 2111
         private const val REQUEST_SELECT_MODEL = 2200
         private const val PAGE_SIZE = 5
