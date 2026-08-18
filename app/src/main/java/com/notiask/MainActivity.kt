@@ -120,7 +120,7 @@ private fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text("通知栏 AI 问答", style = MaterialTheme.typography.headlineSmall)
-            Text("保存配置后启用服务。下拉系统通知栏，展开 NotiAsk 并直接输入问题。")
+            Text("保存配置后启用服务。下拉系统通知栏，展开 NotiAsk 可直接输入问题，或点「截屏搜索」截取屏幕后再补充问题。")
             Button(
                 onClick = {
                     if (notificationsEnabled) showAlreadyEnabled = true
@@ -164,7 +164,7 @@ private fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showAlreadyEnabled = false },
             title = { Text("已启用") },
-            text = { Text("通知栏问答已启用。") },
+            text = { Text("通知栏问答已启用。下拉展开 NotiAsk 通知即可提问或截屏搜索。") },
             confirmButton = { Button(onClick = { showAlreadyEnabled = false }) { Text("确定") } }
         )
     }

@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">NotiAsk</string>
     <string name="notification_channel_name">AI 问答</string>
-    <string name="notification_channel_description">从通知栏向 AI 提问并接收回答</string>
+    <string name="notification_channel_description">从通知栏向 AI 提问、截屏搜索并接收回答</string>
 </resources>

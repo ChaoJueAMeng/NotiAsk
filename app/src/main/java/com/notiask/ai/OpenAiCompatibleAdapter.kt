@@ -1,23 +1,18 @@
 package com.notiask.ai
 
 import com.notiask.data.ConfiguredProfile
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.IOException
 
 class OpenAiCompatibleAdapter(private val client: OkHttpClient) : AiServiceAdapter {
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
 
-    override suspend fun ask(profile: ConfiguredProfile, question: String): String {
-        val body = json.encodeToString(
-            ChatCompletionRequest.serializer(),
-            ChatCompletionRequest(model = profile.profile.model, messages = listOf(ChatMessage("user", question)))
-        )
+    override suspend fun ask(profile: ConfiguredProfile, question: String, imageJpeg: ByteArray?): String {
+        val body = VisionRequestBodies.openAi(profile.profile.model, question, imageJpeg)
         val request = Request.Builder()
             .url(profile.profile.baseUrl.trimEnd('/') + "/chat/completions")
             .header("Authorization", "Bearer ${profile.apiKey}")
@@ -43,7 +38,6 @@ class OpenAiCompatibleAdapter(private val client: OkHttpClient) : AiServiceAdapt
         }
     }
 
-    @Serializable private data class ChatCompletionRequest(val model: String, val messages: List<ChatMessage>)
     @Serializable private data class ChatMessage(val role: String, val content: String)
     @Serializable private data class ChatCompletionResponse(val choices: List<Choice> = emptyList())
     @Serializable private data class Choice(val message: ChatMessage)

@@ -11,11 +11,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 class AnthropicAdapter(private val client: OkHttpClient) : AiServiceAdapter {
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
 
-    override suspend fun ask(profile: ConfiguredProfile, question: String): String {
-        val payload = json.encodeToString(
-            AnthropicRequest.serializer(),
-            AnthropicRequest(profile.profile.model, messages = listOf(AnthropicMessage("user", question)))
-        )
+    override suspend fun ask(profile: ConfiguredProfile, question: String, imageJpeg: ByteArray?): String {
+        val payload = VisionRequestBodies.anthropic(profile.profile.model, question, imageJpeg)
         val request = Request.Builder()
             .url(profile.profile.baseUrl.trimEnd('/') + "/v1/messages")
             .header("x-api-key", profile.apiKey)
@@ -40,8 +37,6 @@ class AnthropicAdapter(private val client: OkHttpClient) : AiServiceAdapter {
         }
     }
 
-    @Serializable private data class AnthropicRequest(val model: String, val max_tokens: Int = 1024, val messages: List<AnthropicMessage>)
-    @Serializable private data class AnthropicMessage(val role: String, val content: String)
     @Serializable private data class AnthropicResponse(val content: List<ContentBlock> = emptyList())
     @Serializable private data class ContentBlock(val type: String, val text: String? = null)
     @Serializable private data class AnthropicError(val error: ErrorBody)

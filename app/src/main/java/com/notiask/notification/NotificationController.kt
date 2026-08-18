@@ -10,6 +10,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import com.notiask.R
 import com.notiask.MainActivity
+import com.notiask.screenshot.ScreenshotAskActivity
 
 class NotificationController(private val context: Context) {
     fun createChannels() {
@@ -29,16 +30,21 @@ class NotificationController(private val context: Context) {
 
     fun persistentNotification(configured: Boolean) = base(CHANNEL_ASK)
         .setContentTitle(if (configured) "NotiAsk：在这里问 AI" else "NotiAsk：请先配置 AI")
-        .setContentText(if (configured) "展开通知后输入问题" else "点按此处打开设置")
+        .setContentText(if (configured) "展开后可提问或截屏搜索" else "点按此处打开设置")
         .setOngoing(true)
         .setOnlyAlertOnce(true)
-        .also { builder -> if (configured) builder.addAction(replyAction("提问")) else builder.setContentIntent(openAppIntent()) }
+        .also { builder ->
+            if (configured) {
+                builder.addAction(replyAction("提问"))
+                builder.addAction(screenshotAction())
+            } else builder.setContentIntent(openAppIntent())
+        }
         .build()
 
-    fun showThinking(question: String) {
+    fun showThinking(question: String, fromScreenshot: Boolean = false) {
         notify(ANSWER_ID, base(CHANNEL_ANSWER)
-            .setContentTitle("AI 正在思考")
-            .setContentText(question)
+            .setContentTitle(if (fromScreenshot) "AI 正在看图" else "AI 正在思考")
+            .setContentText(if (fromScreenshot) "正在分析截图…" else question)
             .setProgress(0, 0, true)
             .setOnlyAlertOnce(true)
             .build())
@@ -77,6 +83,16 @@ class NotificationController(private val context: Context) {
         return NotificationCompat.Action.Builder(0, label, pendingIntent).addRemoteInput(remoteInput).build()
     }
 
+    private fun screenshotAction(): NotificationCompat.Action {
+        val intent = Intent(context, ScreenshotAskActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        val pendingIntent = PendingIntent.getActivity(
+            context, REQUEST_SCREENSHOT, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        return NotificationCompat.Action.Builder(R.drawable.ic_screenshot, "截屏搜索", pendingIntent).build()
+    }
+
     private fun openAppIntent(): PendingIntent = PendingIntent.getActivity(
         context, 0, Intent(context, MainActivity::class.java),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -92,7 +108,9 @@ class NotificationController(private val context: Context) {
         const val INPUT_KEY = "ai_question"
         const val ACTION_ASK = "com.notiask.action.ASK"
         const val FOREGROUND_ID = 1001
+        const val SCREENSHOT_FGS_ID = 1003
         private const val ANSWER_ID = 1002
         private const val REQUEST_ASK = 2101
+        private const val REQUEST_SCREENSHOT = 2102
     }
 }
