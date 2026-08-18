@@ -47,12 +47,11 @@ class ScreenshotCaptureService : Service() {
         val resultCode = intent?.getIntExtra(EXTRA_RESULT_CODE, 0) ?: 0
         val data = intent?.projectionData()
         if (resultCode != Activity.RESULT_OK || data == null) {
-            appContainer().screenshotSession.failed("截屏授权无效")
+            appContainer().notifications.showError("截屏授权无效")
             stopSelf()
             return START_NOT_STICKY
         }
 
-        appContainer().screenshotSession.capturing()
         handler.postDelayed({ capture(resultCode, data) }, SHADE_SETTLE_MS)
         return START_NOT_STICKY
     }
@@ -128,19 +127,23 @@ class ScreenshotCaptureService : Service() {
             val bitmap = ScreenshotBitmap.fromImage(image)
             val jpeg = ScreenshotBitmap.toJpeg(bitmap)
             bitmap.recycle()
-            appContainer().screenshotSession.ready(jpeg)
+            val container = appContainer()
+            container.screenshotSession.setPendingAskImage(jpeg)
+            container.notifications.showScreenshotReady()
         } catch (e: Exception) {
-            appContainer().screenshotSession.failed(e.message ?: "截屏处理失败")
+            appContainer().notifications.showError(e.message ?: "截屏处理失败")
         } finally {
             image.close()
             releaseCapture()
+            stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
     }
 
     private fun failAndStop(message: String) {
-        appContainer().screenshotSession.failed(message)
+        appContainer().notifications.showError(message)
         releaseCapture()
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 

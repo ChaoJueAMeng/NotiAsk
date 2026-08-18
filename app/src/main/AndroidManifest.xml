@@ -28,8 +28,7 @@
             android:launchMode="singleTop"
             android:showWhenLocked="false"
             android:taskAffinity=""
-            android:theme="@style/Theme.NotiAsk.Transparent"
-            android:windowSoftInputMode="adjustResize" />
+            android:theme="@style/Theme.NotiAsk.Transparent" />
         <service
             android:name=".notification.QuestionService"
             android:exported="false"
