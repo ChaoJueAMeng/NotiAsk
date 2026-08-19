@@ -46,15 +46,15 @@ val GlassButtonShape = RoundedCornerShape(50)
 fun glassFillBrush(prominent: Boolean = false): Brush = Brush.verticalGradient(
     colors = if (prominent) {
         listOf(
-            Color.White.copy(alpha = 0.62f),
-            Color.White.copy(alpha = 0.28f),
-            Color.White.copy(alpha = 0.40f),
+            Color.White.copy(alpha = 0.70f),
+            Color.White.copy(alpha = 0.30f),
+            Color.White.copy(alpha = 0.46f),
         )
     } else {
         listOf(
-            Color.White.copy(alpha = 0.48f),
-            Color.White.copy(alpha = 0.16f),
-            Color.White.copy(alpha = 0.28f),
+            Color.White.copy(alpha = 0.52f),
+            Color.White.copy(alpha = 0.18f),
+            Color.White.copy(alpha = 0.32f),
         )
     }
 )

@@ -28,16 +28,21 @@ class BackdropLatticeTest {
     }
 
     @Test
-    fun cellOriginMovesDiagonally() {
-        val (x, y) = BackdropLattice.cellOrigin(1, 2, 10f, 4f)
-        assertEquals(6f, x, 0.001f)
-        assertEquals(16f, y, 0.001f)
+    fun tileShiftAndPixelOffsetSplitDiagonalMotion() {
+        assertEquals(2, BackdropLattice.tileShift(250f, 100f))
+        assertEquals(50f, BackdropLattice.pixelOffset(250f, 100f), 0.001f)
+        assertEquals(0f, BackdropLattice.pixelOffset(300f, 100f), 0.001f)
+    }
+
+    @Test
+    fun copiesNeededCoversSpanPlusOneExtraTile() {
+        assertEquals(4, BackdropLattice.copiesNeeded(200f, 100f))
     }
 
     @Test
     fun floatDisplacementIsBoundedAndChangesWithTime() {
-        val a = BackdropLattice.floatDisplacement(0f, 3, 12f)
-        val b = BackdropLattice.floatDisplacement(1.2f, 3, 12f)
+        val a = BackdropLattice.floatDisplacement(0f, 12f)
+        val b = BackdropLattice.floatDisplacement(1.2f, 12f)
         assertTrue(abs(a.first) <= 12f)
         assertTrue(abs(a.second) <= 12f)
         assertTrue(a != b)

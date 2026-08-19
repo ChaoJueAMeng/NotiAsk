@@ -122,8 +122,10 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Spacer(Modifier.height(8.dp))
-                Text("NotiAsk", style = MaterialTheme.typography.headlineSmall)
-                Text("在通知栏完成提问与阅读", style = MaterialTheme.typography.bodyMedium, color = NotiInkMuted)
+                GlassCard {
+                    Text("NotiAsk", style = MaterialTheme.typography.headlineSmall)
+                    Text("在通知栏完成提问与阅读", style = MaterialTheme.typography.bodyMedium, color = NotiInkMuted)
+                }
 
                 GlassCard {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {

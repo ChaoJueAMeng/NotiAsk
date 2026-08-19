@@ -44,8 +44,11 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-        if (appContainer().profiles.defaultProfile() != null && notificationsAllowed()) {
-            QuestionService.start(this)
+        window.decorView.post {
+            if (isDestroyed) return@post
+            if (appContainer().profiles.defaultProfile() != null && notificationsAllowed()) {
+                QuestionService.start(this)
+            }
         }
     }
 

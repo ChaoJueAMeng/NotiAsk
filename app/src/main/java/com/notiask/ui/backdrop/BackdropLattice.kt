@@ -1,6 +1,7 @@
 package com.notiask.ui.backdrop
 
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.sin
 
 /** 斜向循环平铺与漂浮位移的纯计算，便于单测。 */
@@ -22,32 +23,23 @@ object BackdropLattice {
         return (col + row).mod(count)
     }
 
-    fun cellOrigin(col: Int, row: Int, tilePx: Float, shiftPx: Float): Pair<Float, Float> {
-        val x = col * tilePx - shiftPx
-        val y = row * tilePx - shiftPx
+    fun tileShift(shiftPx: Float, tilePx: Float): Int {
+        require(tilePx > 0f)
+        return floor(shiftPx / tilePx).toInt()
+    }
+
+    fun pixelOffset(shiftPx: Float, tilePx: Float): Float = wrap(shiftPx, tilePx)
+
+    fun copiesNeeded(spanPx: Float, periodPx: Float): Int {
+        require(periodPx > 0f)
+        return kotlin.math.ceil((spanPx + periodPx) / periodPx).toInt() + 1
+    }
+
+    fun floatDisplacement(timeRad: Float, amplitude: Float): Pair<Float, Float> {
+        val x = sin(timeRad) * amplitude * 0.55f
+        val y = cos(timeRad * 0.83f) * amplitude
         return x to y
     }
 
-    fun columnCount(widthPx: Float, tilePx: Float, markCount: Int): Int =
-        kotlin.math.ceil(widthPx / tilePx).toInt() + markCount + 2
-
-    fun rowCount(heightPx: Float, tilePx: Float, markCount: Int): Int =
-        kotlin.math.ceil(heightPx / tilePx).toInt() + markCount + 2
-
-    fun floatDisplacement(timeRad: Float, seed: Int, amplitude: Float): Pair<Float, Float> {
-        val phase = seed * 1.6180339887f
-        val x = sin(timeRad + phase) * amplitude * 0.55f
-        val y = cos(timeRad * 0.83f + phase * 1.27f) * amplitude
-        return x to y
-    }
-
-    fun tiltDegrees(timeRad: Float, seed: Int): Float {
-        val phase = seed * 0.973f
-        return sin(timeRad * 0.7f + phase) * 7.5f
-    }
-
-    fun breatheScale(timeRad: Float, seed: Int): Float {
-        val phase = seed * 1.324f
-        return 1f + 0.045f * sin(timeRad * 0.9f + phase)
-    }
+    fun breatheScale(timeRad: Float): Float = 1f + 0.035f * sin(timeRad * 0.9f)
 }
