@@ -20,6 +20,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +37,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -55,6 +58,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -77,6 +81,7 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -91,6 +96,7 @@ import com.notiask.data.AiProfile
 import com.notiask.data.ProviderKind
 import com.notiask.ui.backdrop.ModelMark
 import com.notiask.ui.glass.GlassButton
+import com.notiask.ui.glass.GlassButtonShape
 import com.notiask.ui.glass.GlassCard
 import com.notiask.ui.glass.GlassIconButton
 import com.notiask.ui.glass.GlassStatusChip
@@ -411,7 +417,8 @@ private fun GlassAlertDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        containerColor = Color.White.copy(alpha = 0.78f),
+        containerColor = NotiCanvas,
+        tonalElevation = 0.dp,
         shape = RoundedCornerShape(28.dp),
         title = { Text(title) },
         text = { Text(text) },
@@ -457,7 +464,8 @@ private fun ProfileEditor(
     )
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color.White.copy(alpha = 0.78f),
+        containerColor = NotiCanvas,
+        tonalElevation = 0.dp,
         shape = RoundedCornerShape(28.dp),
         title = { Text(if (initial == null) "添加 AI 配置" else "编辑 AI 配置") },
         text = {
@@ -471,9 +479,7 @@ private fun ProfileEditor(
                 OutlinedTextField(apiKey, { apiKey = it }, label = { Text("API Key") }, visualTransformation = PasswordVisualTransformation(), singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors, shape = RoundedCornerShape(16.dp))
                 OutlinedTextField(baseUrl, { baseUrl = it }, label = { Text("Base URL") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors, shape = RoundedCornerShape(16.dp))
                 OutlinedTextField(model, { model = it }, label = { Text("模型名称") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors, shape = RoundedCornerShape(16.dp))
-                GlassButton(onClick = { makeDefault = !makeDefault }, modifier = Modifier.fillMaxWidth(), prominent = makeDefault) {
-                    Text(if (makeDefault) "保存后使用该模型" else "保存但不切换当前模型")
-                }
+                UseAfterSaveToggle(selected = makeDefault, onToggle = { makeDefault = !makeDefault })
             }
         },
         confirmButton = {
@@ -640,5 +646,47 @@ private fun ProviderPickerCard(
                 Text("取消")
             }
         }
+    }
+}
+
+@Composable
+private fun UseAfterSaveToggle(
+    selected: Boolean,
+    onToggle: () -> Unit,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .notiGlass(GlassButtonShape, prominent = selected)
+            .toggleable(
+                value = selected,
+                interactionSource = interaction,
+                indication = ripple(color = Color.White.copy(alpha = 0.55f)),
+                role = Role.RadioButton,
+                onValueChange = { onToggle() },
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(20.dp)
+                .border(
+                    width = 2.dp,
+                    color = if (selected) NotiAccent else NotiInkMuted,
+                    shape = CircleShape,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(NotiAccent, CircleShape),
+                )
+            }
+        }
+        Text("保存后使用该模型", modifier = Modifier.padding(start = 10.dp))
     }
 }
