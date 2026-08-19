@@ -1,19 +1,27 @@
 package com.notiask.ui.settings
 
+import android.graphics.drawable.ColorDrawable
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +34,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,8 +48,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +56,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -59,17 +68,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notiask.AppContainer
@@ -448,35 +462,10 @@ private fun ProfileEditor(
         title = { Text(if (initial == null) "添加 AI 配置" else "编辑 AI 配置") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Box {
-                    GlassButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-                        val mark = ModelMark.forProvider(provider)
-                        Icon(painterResource(mark.iconRes), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(22.dp))
-                        Text("服务商：${provider.displayName}", modifier = Modifier.padding(start = 8.dp))
-                    }
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        ProviderKind.entries.forEach { option ->
-                            DropdownMenuItem(
-                                text = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            painterResource(ModelMark.forProvider(option).iconRes),
-                                            contentDescription = null,
-                                            tint = Color.Unspecified,
-                                            modifier = Modifier.size(22.dp),
-                                        )
-                                        Text(option.displayName, modifier = Modifier.padding(start = 8.dp))
-                                    }
-                                },
-                                onClick = {
-                                    provider = option
-                                    baseUrl = option.defaultBaseUrl
-                                    model = option.defaultModel
-                                    expanded = false
-                                },
-                            )
-                        }
-                    }
+                GlassButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+                    val mark = ModelMark.forProvider(provider)
+                    Icon(painterResource(mark.iconRes), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(22.dp))
+                    Text("选择服务商：${provider.displayName}", modifier = Modifier.padding(start = 8.dp))
                 }
                 OutlinedTextField(name, { name = it }, label = { Text("配置名称（可选）") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors, shape = RoundedCornerShape(16.dp))
                 OutlinedTextField(apiKey, { apiKey = it }, label = { Text("API Key") }, visualTransformation = PasswordVisualTransformation(), singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors, shape = RoundedCornerShape(16.dp))
@@ -510,4 +499,146 @@ private fun ProfileEditor(
             GlassButton(onClick = onDismiss, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) { Text("取消") }
         },
     )
+    if (expanded) {
+        ProviderPickerOverlay(
+            selected = provider,
+            onDismiss = { expanded = false },
+            onSelect = { option ->
+                provider = option
+                baseUrl = option.defaultBaseUrl
+                model = option.defaultModel
+            },
+        )
+    }
+}
+
+private val pickerEnterSpec = tween<Float>(durationMillis = 320, easing = LinearOutSlowInEasing)
+private val pickerExitSpec = tween<Float>(durationMillis = 150, easing = FastOutLinearInEasing)
+
+@Composable
+private fun ProviderPickerOverlay(
+    selected: ProviderKind,
+    onDismiss: () -> Unit,
+    onSelect: (ProviderKind) -> Unit,
+) {
+    val visibleState = remember { MutableTransitionState(false).apply { targetState = true } }
+    fun hide() {
+        visibleState.targetState = false
+    }
+    LaunchedEffect(visibleState.currentState, visibleState.targetState) {
+        if (!visibleState.currentState && !visibleState.targetState) onDismiss()
+    }
+    Dialog(
+        onDismissRequest = { hide() },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
+        dialogWindow?.let { window ->
+            window.setWindowAnimations(0)
+            window.setDimAmount(0f)
+            window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            window.setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
+        }
+        SideEffect {
+            dialogWindow?.setWindowAnimations(0)
+            dialogWindow?.setDimAmount(0f)
+            dialogWindow?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            dialogWindow?.setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
+        }
+        Box(Modifier.fillMaxSize()) {
+            AnimatedVisibility(
+                visibleState = visibleState,
+                enter = fadeIn(pickerEnterSpec),
+                exit = fadeOut(pickerExitSpec),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.32f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { hide() },
+                        ),
+                )
+            }
+            AnimatedVisibility(
+                visibleState = visibleState,
+                enter = fadeIn(pickerEnterSpec) + scaleIn(initialScale = 0.94f, animationSpec = pickerEnterSpec),
+                exit = fadeOut(pickerExitSpec) + scaleOut(targetScale = 0.94f, animationSpec = pickerExitSpec),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 24.dp)
+                    .widthIn(max = 560.dp)
+                    .fillMaxWidth(),
+            ) {
+                ProviderPickerCard(
+                    selected = selected,
+                    onDismiss = { hide() },
+                    onSelect = { option ->
+                        onSelect(option)
+                        hide()
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProviderPickerCard(
+    selected: ProviderKind,
+    onDismiss: () -> Unit,
+    onSelect: (ProviderKind) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(NotiCanvas)
+            .padding(24.dp),
+    ) {
+        Text("选择服务商", style = MaterialTheme.typography.headlineSmall)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            ProviderKind.entries.forEach { option ->
+                val isSelected = option == selected
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .notiGlass(RoundedCornerShape(16.dp), prominent = isSelected)
+                        .clickable { onSelect(option) }
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painterResource(ModelMark.forProvider(option).iconRes),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(22.dp),
+                    )
+                    Text(
+                        option.displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(start = 8.dp).weight(1f),
+                    )
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            GlassButton(onClick = onDismiss, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+                Text("取消")
+            }
+        }
+    }
 }
