@@ -43,7 +43,7 @@ internal fun createModelPatternBitmap(context: Context, tilePx: Int): ImageBitma
                 Shader.TileMode.CLAMP,
             )
             canvas.drawCircle(cx, cy, glowRadius, glowPaint)
-            val drawable = ContextCompat.getDrawable(context, mark.iconRes) ?: continue
+            val drawable = ContextCompat.getDrawable(context, mark.iconRes)?.mutate() ?: continue
             drawable.setBounds(
                 col * tilePx + iconPad,
                 row * tilePx + iconPad,
@@ -54,5 +54,16 @@ internal fun createModelPatternBitmap(context: Context, tilePx: Int): ImageBitma
             drawable.draw(canvas)
         }
     }
-    return bitmap.asImageBitmap()
+    val softened = softenByDownsample(bitmap, factor = 3)
+    if (softened !== bitmap) bitmap.recycle()
+    return softened.asImageBitmap()
+}
+
+private fun softenByDownsample(src: Bitmap, factor: Int): Bitmap {
+    val width = (src.width / factor).coerceAtLeast(1)
+    val height = (src.height / factor).coerceAtLeast(1)
+    val small = Bitmap.createScaledBitmap(src, width, height, true)
+    val out = Bitmap.createScaledBitmap(small, src.width, src.height, true)
+    if (small !== src && small !== out) small.recycle()
+    return out
 }
