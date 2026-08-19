@@ -11,6 +11,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onPlaced
@@ -75,7 +77,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notiask.AppContainer
 import com.notiask.data.AiProfile
 import com.notiask.data.ProviderKind
-import com.notiask.ui.backdrop.FloatingModelBackdrop
 import com.notiask.ui.backdrop.ModelMark
 import com.notiask.ui.glass.GlassButton
 import com.notiask.ui.glass.GlassCard
@@ -84,6 +85,8 @@ import com.notiask.ui.glass.GlassIconButton
 import com.notiask.ui.glass.GlassStatusChip
 import com.notiask.ui.glass.notiGlass
 import com.notiask.ui.theme.NotiAccent
+import com.notiask.ui.theme.NotiCanvas
+import com.notiask.ui.theme.NotiCanvasEnd
 import com.notiask.ui.theme.NotiInk
 import com.notiask.ui.theme.NotiInkMuted
 import com.notiask.ui.theme.NotiSuccess
@@ -110,8 +113,11 @@ fun SettingsScreen(
     var showAlreadyEnabled by remember { mutableStateOf(false) }
     var tipsExpanded by rememberSaveable { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxSize()) {
-        FloatingModelBackdrop(Modifier.fillMaxSize())
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(NotiCanvas, NotiCanvasEnd))),
+    ) {
         Scaffold(containerColor = Color.Transparent) { padding ->
             Column(
                 modifier = Modifier

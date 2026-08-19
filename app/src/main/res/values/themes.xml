@@ -5,7 +5,7 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowBackground">#C5DCF6</item>
+        <item name="android:windowBackground">@color/noti_canvas</item>
         <item name="android:colorAccent">@android:color/holo_blue_light</item>
         <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
         <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
