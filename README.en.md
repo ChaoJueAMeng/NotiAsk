@@ -24,28 +24,28 @@ The usual AI workflow is:
 
 > **Using another app → think of a question → switch apps or open a floating window to ask AI → wait for the answer… → switch back**
 
-**NotiAsk shortens it to:**
+NotiAsk shortens it to:
 
 > **Using another app → think of a question → pull down the notification shade to ask AI → continue what you were doing → check the answer in the shade whenever you want**
 
-**NotiAsk gives you:**
+NotiAsk gives you:
 
->- **No need to leave the app you are using or open split-screen / a floating window. Pull down to ask, or capture the screen and ask in one tap.**
->- **While composing a question, swipe up at any time to quickly check what you are asking about or reply to an important message; NotiAsk keeps your draft.**
->- **After you ask, the AI generates in the background while you continue what you were doing.**
->- **When the answer is ready, you receive a notification that you can expand, read, and copy at any time.**
+- **No need to leave the app you are using or open split-screen / a floating window. Pull down to ask, or capture the screen and ask in one tap.**
+- **While composing a question, swipe up at any time to quickly check what you are asking about or reply to an important message; NotiAsk keeps your draft.**
+- **After you ask, the AI generates in the background while you continue what you were doing.**
+- **When the answer is ready, you receive a notification that you can expand, read, and copy at any time.**
 
 ### NotiAsk is not trying to be another chat client. It makes AI available like a system feature when you need it: fewer interface switches and fewer interruptions.
 
 ## ✨ Features
 
-- **Ask from a notification** — Uses Android Direct Reply, so you can type a question in the persistent notification.
-- **Read answers in the shade** — Replies arrive as expandable notifications and can be copied with one tap.
-- **Ask about a screenshot** — Start a screenshot from the notification, add a question when it is captured, or let a vision-capable model explain the screen directly.
-- **Switch models in the notification** — Change among saved profiles without opening the app. The active profile is pinned first; longer lists are paginated.
-- **Multiple providers and profiles** — Save, name, and switch between several API configurations.
-- **Direct-to-provider requests** — NotiAsk has no proxy backend; requests go from your device to the AI provider you configure.
-- **Encrypted key storage** — API keys are encrypted locally with a non-exportable Android Keystore key.
+>- **Ask from a notification** — Uses Android Direct Reply, so you can type a question in the persistent notification.
+>- **Read answers in the shade** — Replies arrive as expandable notifications and can be copied with one tap.
+>- **Ask about a screenshot** — Start a screenshot from the notification, add a question when it is captured, or let a vision-capable model explain the screen directly.
+>- **Switch models in the notification** — Change among saved profiles without opening the app. The active profile is pinned first; longer lists are paginated.
+>- **Multiple providers and profiles** — Save, name, and switch between several API configurations.
+>- **Direct-to-provider requests** — NotiAsk has no proxy backend; requests go from your device to the AI provider you configure.
+>- **Encrypted key storage** — API keys are encrypted locally with a non-exportable Android Keystore key.
 
 ## 📱 How it works
 
