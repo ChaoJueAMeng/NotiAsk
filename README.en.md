@@ -2,15 +2,15 @@
 
 # NotiAsk
 
-### Ask AI directly from your Android notification shade
+AI should not always be hidden inside an app.
 
-**No chat app to open. Pull down → ask → read the answer in a notification.**
+### NotiAsk puts the AI entry point in the *notification shade* you open every day.
+
+**Pull down the notification shade → ask → read the answer in the notification shade.**
 
 [简体中文](README.md) · [Features](#-features) · [Quick start](#-quick-start) · [Provider setup](#-provider-setup) · [Privacy & security](#-privacy--security)
 
 </div>
-
-> AI does not always need to live inside an app. NotiAsk puts the asking interface in the Android notification shade you already use every day.
 
 <!--
   Before publishing, add a 10–20 second demo GIF here:
@@ -24,7 +24,7 @@ The usual AI workflow is:
 
 > **Using another app → think of a question → switch apps or open a floating window to ask AI → wait for the answer… → switch back**
 
-NotiAsk shortens it to:
+NotiAsk improves it to:
 
 > **Using another app → think of a question → pull down the notification shade to ask AI → continue what you were doing → check the answer in the shade whenever you want**
 
