@@ -105,12 +105,17 @@ fun GlassButton(
     Row(
         modifier = modifier
             .notiGlass(GlassButtonShape, prominent = prominent)
-            .clickable(
-                interactionSource = interaction,
-                indication = ripple(color = Color.White.copy(alpha = 0.55f)),
-                enabled = enabled,
-                role = Role.Button,
-                onClick = onClick,
+            .then(
+                if (enabled) {
+                    Modifier.clickable(
+                        interactionSource = interaction,
+                        indication = ripple(color = Color.White.copy(alpha = 0.55f)),
+                        role = Role.Button,
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier
+                },
             )
             .padding(contentPadding),
         horizontalArrangement = Arrangement.Center,
