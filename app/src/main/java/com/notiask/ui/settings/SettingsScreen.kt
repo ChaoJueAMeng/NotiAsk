@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -16,8 +17,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,7 +34,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BatterySaver
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -80,7 +78,6 @@ import com.notiask.data.ProviderKind
 import com.notiask.ui.backdrop.ModelMark
 import com.notiask.ui.glass.GlassButton
 import com.notiask.ui.glass.GlassCard
-import com.notiask.ui.glass.GlassChip
 import com.notiask.ui.glass.GlassIconButton
 import com.notiask.ui.glass.GlassStatusChip
 import com.notiask.ui.glass.notiGlass
@@ -92,7 +89,6 @@ import com.notiask.ui.theme.NotiInkMuted
 import com.notiask.ui.theme.NotiSuccess
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     container: AppContainer,
@@ -111,7 +107,13 @@ fun SettingsScreen(
     var showEditor by rememberSaveable { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf<AiProfile?>(null) }
     var showAlreadyEnabled by remember { mutableStateOf(false) }
-    var tipsExpanded by rememberSaveable { mutableStateOf(false) }
+    var tipsExpandedOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    val tipsExpanded = tipsExpandedOverride ?: profiles.isEmpty()
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (tipsExpanded) 180f else 0f,
+        animationSpec = tipsToggleSpec(),
+        label = "tipsChevron",
+    )
 
     Box(
         Modifier
@@ -179,44 +181,46 @@ fun SettingsScreen(
                     }
                 }
 
-                GlassCard(contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { tipsExpanded = !tipsExpanded }
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(Icons.Filled.Info, contentDescription = null, tint = NotiAccent)
-                        Text("如何使用", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp).weight(1f))
-                        Icon(
-                            imageVector = if (tipsExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                            contentDescription = if (tipsExpanded) "收起说明" else "展开说明",
-                            tint = NotiInkMuted,
-                        )
-                    }
-                    AnimatedVisibility(
-                        visible = tipsExpanded,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically(),
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                GlassCard(
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { tipsExpandedOverride = !tipsExpanded }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            TipLine("1", "添加并保存一组 AI 配置")
-                            TipLine("2", "启用通知栏问答，授予通知权限")
-                            TipLine("3", "下拉系统通知栏，展开 NotiAsk 即可提问或截屏搜索")
+                            Icon(Icons.Filled.Info, contentDescription = null, tint = NotiAccent)
+                            Text("如何使用", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp).weight(1f))
+                            Icon(
+                                imageVector = Icons.Filled.ExpandMore,
+                                contentDescription = if (tipsExpanded) "收起说明" else "展开说明",
+                                tint = NotiInkMuted,
+                                modifier = Modifier.graphicsLayer { rotationZ = chevronRotation },
+                            )
                         }
-                    }
-                    FlowRow(
-                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        GlassChip("通知栏提问")
-                        GlassChip("截屏搜索")
-                        GlassChip("切换模型")
+                        AnimatedVisibility(
+                            visible = tipsExpanded,
+                            enter = expandVertically(
+                                animationSpec = tipsToggleSpec(),
+                                expandFrom = Alignment.Top,
+                            ) + fadeIn(animationSpec = tipsToggleSpec()),
+                            exit = shrinkVertically(
+                                animationSpec = tipsToggleSpec(),
+                                shrinkTowards = Alignment.Top,
+                            ) + fadeOut(animationSpec = tipsToggleSpec()),
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                TipLine("1", "添加并保存一组 AI 配置")
+                                TipLine("2", "启用通知栏问答，授予通知权限")
+                                TipLine("3", "下拉系统通知栏，展开 NotiAsk 即可提问或截屏搜索")
+                            }
+                        }
                     }
                 }
 
@@ -240,12 +244,12 @@ fun SettingsScreen(
                         )
                     }
                 }
-                orderedProfiles.forEach { profile ->
+                orderedProfiles.forEachIndexed { index, profile ->
                     key(profile.id) {
                         ProfileRow(
                             modifier = Modifier
                                 .zIndex(if (profile.id == defaultId) 1f else 0f)
-                                .animatePlacement(),
+                                .animatePlacement(listIndex = index),
                             profile = profile,
                             isDefault = profile.id == defaultId,
                             onSelect = { container.profiles.selectDefault(profile.id) },
@@ -354,17 +358,23 @@ private fun ProfileRow(
 
 private val placementSpec = tween<IntOffset>(durationMillis = 280, easing = FastOutSlowInEasing)
 
+private fun <T> tipsToggleSpec() = tween<T>(durationMillis = 280, easing = FastOutSlowInEasing)
+
 private fun Modifier.animatePlacement(
+    listIndex: Int,
     animationSpec: FiniteAnimationSpec<IntOffset> = placementSpec,
 ): Modifier = composed {
     val scope = rememberCoroutineScope()
     val translation = remember { Animatable(IntOffset.Zero, IntOffset.VectorConverter) }
     val lastLayoutPos = remember { arrayOfNulls<IntOffset>(1) }
+    val lastListIndex = remember { mutableStateOf(listIndex) }
+    val shouldAnimatePlacement = lastListIndex.value != listIndex
+    lastListIndex.value = listIndex
     onPlaced { coordinates ->
         val newPos = coordinates.positionInParent().round()
         val previous = lastLayoutPos[0]
         lastLayoutPos[0] = newPos
-        if (previous == null) return@onPlaced
+        if (previous == null || !shouldAnimatePlacement) return@onPlaced
         val layoutDelta = newPos - previous
         if (layoutDelta == IntOffset.Zero) return@onPlaced
         val from = translation.value - layoutDelta
