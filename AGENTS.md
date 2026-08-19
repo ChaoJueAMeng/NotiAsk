@@ -1,6 +1,6 @@
 # NotiAsk
 
-NotiAsk 是纯 Kotlin + Jetpack Compose 的 Android 客户端，通过系统通知栏的 Direct Reply 输入框向 AI 提问。项目概览、服务商配置与安全说明见 `README.md`。
+NotiAsk 是纯 Kotlin + Jetpack Compose 的 Android 客户端，通过系统通知栏的 Direct Reply 输入框向 AI 提问。当前主流程分为 `MainActivity` / `SettingsScreen` / `ProfileRepository` 的配置面，`QuestionService` / `NotificationController` / `QuestionReceiver` 的常驻通知面，以及 `ScreenshotAskActivity` + `ScreenshotCaptureService` 的“截屏后提问”面；AI 后端支持 `AnthropicAdapter` 的原生 Messages 协议和 `OpenAiCompatibleAdapter` 的 OpenAI-compatible Chat Completions 协议。项目概览、服务商配置与安全说明见 `README.md`。
 
 ## Cursor Cloud specific instructions
 
@@ -27,4 +27,4 @@ NotiAsk 是纯 Kotlin + Jetpack Compose 的 Android 客户端，通过系统通�
 - 软件模式下**冷启动约 4 分钟**；刚开机 1~2 分钟内 system/systemui 会弹瞬时 ANR（"isn't responding"），点 Wait 或等待即可，**不要 kill**。
 - 模拟器为 headless，用 `adb` 交互：`adb exec-out screencap -p > x.png` 截图、`adb shell uiautomator dump` 取控件坐标、`adb shell input tap/text` 操作。
 - Compose 输入框注意：`adb shell input text` 只有在字段获得焦点、IME 连接就绪后才生效（软件模式慢，点完字段先 sleep 几秒再输入）；`ESC`/`BACK` 键会关闭 Compose 的 `AlertDialog`，需要收起键盘时用 `Enter`（`keyevent 66`），不要用 ESC。
-- 冒烟验证：启动 App → 点"添加"填 API Key 保存（密钥经 Android Keystore AES-GCM 加密后写入 `shared_prefs/notiask_config.xml`，可用 `adb shell run-as com.notiask cat ...` 确认非明文）→ 点"启用通知栏问答"授予通知权限，前台服务 `QuestionService` 会常驻并推送带输入框的通知。
+- 冒烟验证：启动 App → 点"添加"填 API Key 保存（密钥经 Android Keystore AES-GCM 加密后写入 `shared_prefs/notiask_config.xml`，可用 `adb shell run-as com.notiask cat ...` 确认非明文）→ 点"启用通知栏问答"授予通知权限，前台服务 `QuestionService` 会常驻并推送带输入框的通知；如要验证截屏链路，再点"截屏搜索"完成媒体投影授权，`ScreenshotCaptureService` 会先提示已截图，再由同一个通知流继续提问。
