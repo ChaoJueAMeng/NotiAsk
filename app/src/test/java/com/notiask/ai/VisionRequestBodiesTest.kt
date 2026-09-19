@@ -14,9 +14,19 @@ class VisionRequestBodiesTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
+    fun openAiPutsSystemPromptBeforeUserMessage() {
+        val body = json.parseToJsonElement(VisionRequestBodies.openAi("gpt-4.1-mini", "你好", null)).jsonObject
+        val messages = body["messages"]!!.jsonArray
+        assertEquals(2, messages.size)
+        assertEquals("system", messages[0].jsonObject["role"]!!.jsonPrimitive.content)
+        assertEquals(VisionRequestBodies.SYSTEM_PROMPT, messages[0].jsonObject["content"]!!.jsonPrimitive.content)
+        assertEquals("user", messages[1].jsonObject["role"]!!.jsonPrimitive.content)
+    }
+
+    @Test
     fun openAiTextOnlyKeepsStringContent() {
         val body = json.parseToJsonElement(VisionRequestBodies.openAi("gpt-4.1-mini", "你好", null)).jsonObject
-        val content = body["messages"]!!.jsonArray.first().jsonObject["content"]!!.jsonPrimitive.content
+        val content = body["messages"]!!.jsonArray.last().jsonObject["content"]!!.jsonPrimitive.content
         assertEquals("你好", content)
         assertFalse(body.toString().contains("image_url"))
     }
@@ -25,13 +35,22 @@ class VisionRequestBodiesTest {
     fun openAiWithJpegUsesImageUrlDataUri() {
         val jpeg = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0x01, 0x02)
         val body = json.parseToJsonElement(VisionRequestBodies.openAi("gpt-4.1-mini", "这是什么", jpeg)).jsonObject
-        val content = body["messages"]!!.jsonArray.first().jsonObject["content"]!!.jsonArray
+        val content = body["messages"]!!.jsonArray.last().jsonObject["content"]!!.jsonArray
         assertEquals("text", content[0].jsonObject["type"]!!.jsonPrimitive.content)
         assertEquals("这是什么", content[0].jsonObject["text"]!!.jsonPrimitive.content)
         assertEquals("image_url", content[1].jsonObject["type"]!!.jsonPrimitive.content)
         val url = content[1].jsonObject["image_url"]!!.jsonObject["url"]!!.jsonPrimitive.content
         assertTrue(url.startsWith("data:image/jpeg;base64,"))
         assertTrue(url.length > "data:image/jpeg;base64,".length)
+    }
+
+    @Test
+    fun anthropicUsesTopLevelSystemField() {
+        val body = json.parseToJsonElement(VisionRequestBodies.anthropic("claude-sonnet-4-20250514", "你好", null)).jsonObject
+        assertEquals(VisionRequestBodies.SYSTEM_PROMPT, body["system"]!!.jsonPrimitive.content)
+        val messages = body["messages"]!!.jsonArray
+        assertEquals(1, messages.size)
+        assertEquals("user", messages[0].jsonObject["role"]!!.jsonPrimitive.content)
     }
 
     @Test

@@ -16,10 +16,21 @@ object VisionRequestBodies {
     const val DEFAULT_SCREENSHOT_QUESTION =
         "请根据这张截图回答：画面里是什么？请提取关键信息；如果有文字请一并整理。"
 
+    /** 回答最终落在通知栏里：空间小、不渲染 Markdown，所以要求模型直接给纯文本短答。 */
+    const val SYSTEM_PROMPT =
+        "你的回答会直接显示在手机通知栏里，空间有限且不会渲染 Markdown。" +
+            "请用简洁的纯文本回答：不要使用标题、加粗、斜体、列表符号、表格或代码块等 Markdown 标记；" +
+            "需要分点时直接写「1. 2. 3.」并换行；不要寒暄和重复问题，能一两句话说清就不要展开。" +
+            "使用与提问相同的语言。"
+
     fun openAi(model: String, text: String, imageJpeg: ByteArray?): String {
         val body = buildJsonObject {
             put("model", model)
             put("messages", buildJsonArray {
+                add(buildJsonObject {
+                    put("role", "system")
+                    put("content", SYSTEM_PROMPT)
+                })
                 add(buildJsonObject {
                     put("role", "user")
                     put("content", openAiContent(text, imageJpeg))
@@ -33,6 +44,7 @@ object VisionRequestBodies {
         val body = buildJsonObject {
             put("model", model)
             put("max_tokens", maxTokens)
+            put("system", SYSTEM_PROMPT)
             put("messages", buildJsonArray {
                 add(buildJsonObject {
                     put("role", "user")
