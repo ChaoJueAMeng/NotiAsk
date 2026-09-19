@@ -6,6 +6,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.content.ContextCompat
+import com.notiask.ai.AnswerFormatter
 import com.notiask.appContainer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +32,7 @@ class QuestionService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForegroundNotification()
         intent?.getStringExtra(EXTRA_QUESTION)?.takeIf { it.isNotBlank() }?.let { question ->
-            val wantsImage = intent.getBooleanExtra(EXTRA_HAS_IMAGE, false)
+            val wantsImage = intent.getBooleanExtra(NotificationController.EXTRA_HAS_IMAGE, false)
             val image = if (wantsImage) appContainer().screenshotSession.takePendingAskImage() else null
             askAi(question, image, wantsImage)
         }
@@ -72,7 +73,7 @@ class QuestionService : Service() {
         }
         container.notifications.showThinking(question, fromScreenshot = imageJpeg != null)
         container.aiGateway.ask(profile, question, imageJpeg)
-            .onSuccess { container.notifications.showAnswer(question, it) }
+            .onSuccess { container.notifications.showAnswer(question, AnswerFormatter.plain(it)) }
             .onFailure { container.notifications.showError(it.userMessage(imageJpeg != null)) }
     }
 
@@ -103,11 +104,10 @@ class QuestionService : Service() {
                 context,
                 Intent(context, QuestionService::class.java)
                     .putExtra(EXTRA_QUESTION, question)
-                    .putExtra(EXTRA_HAS_IMAGE, hasImage)
+                    .putExtra(NotificationController.EXTRA_HAS_IMAGE, hasImage)
             )
         }
 
         private const val EXTRA_QUESTION = "question"
-        private const val EXTRA_HAS_IMAGE = "has_image"
     }
 }
