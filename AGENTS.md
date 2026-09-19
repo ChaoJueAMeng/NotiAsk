@@ -17,7 +17,7 @@ NotiAsk 是纯 Kotlin + Jetpack Compose 的 Android 客户端，通过系统通�
 
 - 构建 Debug APK：`gradle :app:assembleDebug`（产物在 `app/build/outputs/apk/debug/app-debug.apk`）。
 - 单元测试：`gradle :app:testDebugUnitTest`。
-- Lint：`gradle :app:lintDebug`。注意：当前存在 **1 个既有的** `MissingPermission` 报错（`NotificationController.kt` 调用 `notify`），会让该 task 以非零码结束，这是仓库代码本身的问题、并非环境问题；排查环境时不要因此误判。
+- Lint：`gradle :app:lintDebug`。当前 0 error、约 30 个 warning（依赖版本提示、`UseKtx`、`UnusedResources` 等），task 以 0 退出；若出现 error 属于新引入的问题。
 
 ### 运行 App（模拟器）
 

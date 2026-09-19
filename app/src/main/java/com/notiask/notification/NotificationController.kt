@@ -1,15 +1,19 @@
 package com.notiask.notification
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
+import androidx.core.content.ContextCompat
 import com.notiask.MainActivity
 import com.notiask.R
 import com.notiask.data.AiProfile
@@ -229,7 +233,7 @@ class NotificationController(private val context: Context) {
     private fun questionFile() = File(context.cacheDir, "last_ai_question.txt")
 
     private fun base(channel: String) = NotificationCompat.Builder(context, channel)
-        .setSmallIcon(R.drawable.ic_launcher_foreground)
+        .setSmallIcon(R.drawable.ic_stat_notiask)
         .setCategory(if (channel == CHANNEL_ASK) NotificationCompat.CATEGORY_SERVICE else NotificationCompat.CATEGORY_MESSAGE)
         .setAutoCancel(channel == CHANNEL_ANSWER)
 
@@ -305,6 +309,10 @@ class NotificationController(private val context: Context) {
     )
 
     private fun notify(id: Int, notification: android.app.Notification) {
+        // Android 13+ 未授予 POST_NOTIFICATIONS 时 notify 会抛 SecurityException；lint 也要求显式检查。
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) return
         NotificationManagerCompat.from(context).notify(id, notification)
     }
 

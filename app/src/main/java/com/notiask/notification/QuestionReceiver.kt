@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.widget.Toast
 import androidx.core.app.RemoteInput
 import com.notiask.R
@@ -38,7 +39,10 @@ class QuestionReceiver : BroadcastReceiver() {
                 if (answer.isBlank()) return
                 val clipboard = context.getSystemService(ClipboardManager::class.java)
                 clipboard.setPrimaryClip(ClipData.newPlainText("AI 回答", answer))
-                Toast.makeText(context, context.getString(R.string.copied_answer), Toast.LENGTH_SHORT).show()
+                // Android 13+ 系统自带剪贴板预览提示，再弹 Toast 会连闪两次。
+                if (Build.VERSION.SDK_INT < 33) {
+                    Toast.makeText(context, context.getString(R.string.copied_answer), Toast.LENGTH_SHORT).show()
+                }
             }
             NotificationController.ACTION_SWITCH_MODEL -> {
                 notifications.showSwitchModelPane()
