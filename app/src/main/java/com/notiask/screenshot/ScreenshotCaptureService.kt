@@ -180,7 +180,7 @@ class ScreenshotCaptureService : Service() {
 
     private fun capturingNotification(): Notification =
         androidx.core.app.NotificationCompat.Builder(this, NotificationController.CHANNEL_ASK)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_notiask)
             .setContentTitle("NotiAsk 正在截屏")
             .setContentText("正在捕获当前屏幕")
             .setOngoing(true)
